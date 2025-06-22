@@ -1,0 +1,188 @@
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.tmp
+*.temp
+
+# Windows
+desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# Logs
+*.log
+logs/
+*.log.*
+log/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Dependency directories
+node_modules/
+bower_components/
+
+# Optional npm cache directory
+.npm
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Elasticsearch
+data/
+elasticsearch-*/
+
+# Logstash
+*.sincedb
+
+# Kibana
+optimize/
+.kibana/
+
+# Security sensitive files
+*.key
+*.pem
+*.crt
+*.p12
+*.jks
+*.keystore
+*.truststore
+passwords.txt
+secrets.txt
+.env.local
+.env.production
+.env.staging
+
+# Configuration files with sensitive data
+config/local.*
+config/production.*
+**/secrets/**
+**/credentials/**
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+
+# Compressed files
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Database files
+*.sql
+*.sqlite
+*.db
+
+# Cache directories
+.cache/
+cache/
+tmp/
+temp/
+
+# Test coverage
+coverage/
+.nyc_output/
+.coverage
+
+# Documentation build
+docs/_build/
+site/
+
+# Local configuration
+local.conf
+local.yml
+local.yaml
+.local
+
+# Elastic Stack specific
+# Elasticsearch data and logs
+elasticsearch/data/
+elasticsearch/logs/
+es_data/
+
+# Logstash patterns and temp files
+logstash/patterns/
+logstash/tmp/
+
+# Kibana saved objects exports
+kibana/export/
+kibana/saved_objects/
+
+# Custom exclusions for threat hunting and detection
+# Exclude sensitive IOCs or intel that shouldn't be public
+threat-intel/private/
+detection-rules/sensitive/
+incident-casebook/confidential/
+
+# Performance monitoring data
+performance-monitoring/data/
+performance-monitoring/metrics/
+
+# Script outputs and automation logs
+scripts-and-automation/outputs/
+scripts-and-automation/logs/
+
+# Ingestion pipeline test data
+ingestion-pipelines/test-data/
+ingestion-pipelines/sample-logs/
