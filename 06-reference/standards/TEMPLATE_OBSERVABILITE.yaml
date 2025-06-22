@@ -1,0 +1,34 @@
+# Template YAML — Observability Rule (Format Sigma)
+
+---
+title: TITRE_DE_LA_RÈGLE
+id: obs-xxx  # ex: obs-001
+description: >
+  Décrivez brièvement la condition d’alerte, pourquoi elle est importante,
+  et les conséquences potentielles en cas d’inaction.
+severity: low | medium | high | critical
+source:
+  type: metrics | logs | traces
+  datasource: ex: metricbeat, filebeat, apm
+  host_group: ex: production, staging, all_servers
+condition:
+  metric: nom.du.metric (ex: system.cpu.total.pct)
+  threshold: ">= 0.90"
+  duration: "5m"
+actions:
+  - type: notify
+    channel: slack | email | webhook
+  - type: log
+    index: nom-de-l-index
+tags:
+  - observability
+  - cpu | memory | disk | apm | logs
+  - critical_system | webapp | etc.
+dashboards:
+  - name: Dashboard Nom
+    url: https://kibana.exemple.com/app/dashboards#/view/...
+notes: |
+  Détaillez ici des éléments importants :
+  - lien avec des incidents passés
+  - suggestions de remédiation
+  - dépendances techniques (services, agents, etc.)
