@@ -1,0 +1,60 @@
+---
+id: e6eb6789-46e3-4b84-b845-820131999af8
+title: Architecture des Flux de Données ELK avec Fleet Server
+---
+flowchart LR
+    %% Définition des styles pour thème sombre
+    classDef source fill:#2a1626,stroke:#ff69b4,stroke-width:2px,color:#ff69b4;
+    classDef agent fill:#3d3000,stroke:#ffd700,stroke-width:2px,color:#ffd700;
+    classDef fleet fill:#331f00,stroke:#ff8c00,stroke-width:2px,color:#ff8c00;
+    classDef storage fill:#004d1a,stroke:#00fa9a,stroke-width:2px,color:#00fa9a;
+    classDef monitor fill:#003366,stroke:#00bfff,stroke-width:2px,color:#00bfff;
+    classDef visual fill:#330000,stroke:#ff6b6b,stroke-width:2px,color:#ff6b6b;
+
+    %% Sources de données externes
+    O365[("Office 365<br/>Management API")]:::source
+    Azure[("Azure AD")]:::source
+    SYS[("Métriques<br/>Système")]:::source
+
+    %% Infrastructure Docker-ELK
+    subgraph Docker-ELK["Infrastructure Docker-ELK"]
+        direction TB
+        
+        subgraph Agents["Elastic Agents"]
+            direction LR
+            O365Agent["O365 Integration<br/>Agent"]:::agent
+            MB["Metricbeat<br/>Agent"]:::monitor
+        end
+
+        subgraph Management["Gestion des Agents"]
+            FS["Fleet Server"]:::fleet
+        end
+
+        subgraph Storage["Cluster Elasticsearch"]
+            direction LR
+            ES1["ES Node 1<br/>(Master + Data)"]:::storage
+            ES2["ES Node 2<br/>(Data)"]:::storage
+        end
+
+        KB["Kibana<br/>Visualisation"]:::visual
+    end
+
+    %% Flux d'authentification
+    Azure -->|"Auth (Client ID,<br/>Secret)"| O365Agent
+    
+    %% Flux de données
+    O365 -->|"9 intégrations"| O365Agent
+    SYS -->|"Métriques système"| MB
+    
+    %% Gestion des agents
+    FS -->|"Déploiement<br/>policies"| O365Agent
+    FS -->|"Configuration"| MB
+    
+    %% Stockage et visualisation
+    O365Agent -->|"Logs ECS"| ES1 & ES2
+    MB -->|"Métriques"| ES1
+    ES1 <-->|"Réplication"| ES2
+    ES1 & ES2 -->|"Données<br/>indexées"| KB
+    
+    %% Gestion via Kibana
+    KB -->|"Gestion des<br/>intégrations"| FS
