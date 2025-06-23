@@ -1,8 +1,9 @@
-# Kibana Documentation
+# Kibana - Interface Web Sécurisée
 
 ## Table des Matières
 
 - [Vue d'ensemble](#vue-densemble)
+- [Configuration TLS](#configuration-tls)
 - [Configuration](#configuration)
 - [Gestion des Spaces](#gestion-des-spaces)
 - [Dashboards O365](#dashboards-o365)
@@ -31,6 +32,32 @@ xpack.security.enabled: true
 # Configuration des sessions
 xpack.security.session.idleTimeout: "1h"
 xpack.security.session.lifespan: "24h"
+```
+
+## Configuration TLS
+
+### Accès Sécurisé
+
+- **Port** : 5601 avec TLS
+- **URL** : `https://localhost:5601`
+- **Certificats** : Utilisation des certificats partagés du volume `certs`
+
+### Authentification
+
+- **Connexion Elasticsearch** : Utilisateur `kibana_system` avec mot de passe sécurisé
+- **Interface utilisateur** : Authentification via utilisateurs Elasticsearch
+- **Accès par défaut** : `elastic` / `changeme` (à modifier après installation)
+
+### Configuration
+
+```yaml
+elasticsearch.hosts: ["https://elasticsearch:9200"]
+elasticsearch.username: "kibana_system"
+elasticsearch.password: "${KIBANA_SYSTEM_PASSWORD}"
+elasticsearch.ssl.certificateAuthorities: ["/usr/share/kibana/config/certs/ca/ca.crt"]
+server.ssl.enabled: true
+server.ssl.certificate: "/usr/share/kibana/config/certs/kibana/kibana.crt"
+server.ssl.key: "/usr/share/kibana/config/certs/kibana/kibana.key"
 ```
 
 ## Gestion des Spaces

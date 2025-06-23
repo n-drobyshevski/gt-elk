@@ -1,8 +1,10 @@
-# Elasticsearch Configuration Documentation
+# Elasticsearch - Configuration TLS
 
 ## Table des Matières
 
 - [Vue d'ensemble](#vue-densemble)
+- [Configuration TLS](#configuration-tls)
+- [Authentification](#authentification)
 - [Configuration du Cluster](#configuration-du-cluster)
 - [Templates et Index](#templates-et-index)
 - [Politiques ILM](#politiques-ilm)
@@ -18,6 +20,50 @@ Elasticsearch joue un rôle central dans notre architecture en tant que moteur d
 - **Nœud 1 (ES1)** : Master + Data
 - **Nœud 2 (ES2)** : Data uniquement
 - **Version** : 9.0.2
+
+## Configuration TLS
+
+### Ports Sécurisés
+
+- **9200** : API HTTP avec TLS
+- **9300** : Transport inter-nœuds avec TLS
+
+### Certificats
+
+- **CA** : Autorité de certification auto-générée
+- **Certificat nœud** : `/usr/share/elasticsearch/config/certs/elasticsearch/elasticsearch.crt`
+- **Clé privée** : `/usr/share/elasticsearch/config/certs/elasticsearch/elasticsearch.key`
+
+### Configuration Sécurité
+
+```yaml
+xpack.security.enabled: true
+xpack.security.http.ssl.enabled: true
+xpack.security.http.ssl.key: certs/elasticsearch/elasticsearch.key
+xpack.security.http.ssl.certificate: certs/elasticsearch/elasticsearch.crt
+xpack.security.http.ssl.certificate_authorities: certs/ca/ca.crt
+xpack.security.transport.ssl.enabled: true
+xpack.security.transport.ssl.key: certs/elasticsearch/elasticsearch.key
+xpack.security.transport.ssl.certificate: certs/elasticsearch/elasticsearch.crt
+xpack.security.transport.ssl.certificate_authorities: certs/ca/ca.crt
+```
+
+## Authentification
+
+### Utilisateurs Intégrés
+
+- **elastic** : Superutilisateur pour administration
+- **kibana_system** : Utilisateur système pour Kibana
+- **logstash_internal** : Utilisateur dédié pour Logstash
+
+### Gestion des Mots de Passe
+
+Les mots de passe sont initialisés lors du premier déploiement et peuvent être modifiés via l'API REST ou Kibana.
+
+```bash
+# Réinitialiser mot de passe utilisateur elastic
+docker compose exec elasticsearch bin/elasticsearch-reset-password --batch --user elastic --url https://localhost:9200
+```
 
 ## Configuration du Cluster
 

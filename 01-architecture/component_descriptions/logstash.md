@@ -1,8 +1,9 @@
-# Logstash Documentation
+# Logstash - Pipeline de Traitement Sécurisé
 
 ## Table des Matières
 
 - [Vue d'ensemble](#vue-densemble)
+- [Configuration TLS](#configuration-tls)
 - [Pipeline Principal](#pipeline-principal)
 - [Configuration et Performance](#configuration-et-performance)
 - [Gestion des Erreurs](#gestion-des-erreurs)
@@ -11,6 +12,40 @@
 ## Vue d'ensemble
 
 Logstash est utilisé dans notre architecture pour l'ingestion et le traitement des données Office 365 via l'API de gestion d'activité. Il assure la normalisation des données et leur enrichissement avant l'envoi vers Elasticsearch.
+
+## Configuration TLS
+
+### Connexion Elasticsearch Sécurisée
+
+- **Sortie** : Connexion TLS vers Elasticsearch sur port 9200
+- **Authentification** : Utilisateur `logstash_internal` dédié
+- **Certificats** : Validation CA pour sécurité transport
+
+### Ports et Entrées
+
+- **5044** : Beats input (peut être sécurisé avec TLS)
+- **50000** : TCP input pour tests et données personnalisées
+- **9600** : API de monitoring
+
+### Configuration Pipeline
+
+```ruby
+output {
+  elasticsearch {
+    hosts => ["https://elasticsearch:9200"]
+    user => "logstash_internal"
+    password => "${LOGSTASH_INTERNAL_PASSWORD}"
+    ssl => true
+    cacert => "/usr/share/logstash/config/certs/ca/ca.crt"
+    index => "logstash-%{+YYYY.MM.dd}"
+  }
+}
+```
+
+### Variables d'Environnement
+
+- **LS_JAVA_OPTS** : Configuration JVM (mémoire heap)
+- **LOGSTASH_INTERNAL_PASSWORD** : Mot de passe authentification Elasticsearch
 
 ## Pipeline Principal
 

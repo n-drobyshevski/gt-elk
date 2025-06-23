@@ -1,164 +1,201 @@
-# ELK_GT - Stack ELK Sécurité Avancée
+# Documentation Plateforme SIEM ELK_GT
 
-## 🛡️ Vue d'Ensemble
+## Guide de Référence Technique & d'Opérations Internes
 
-Solution avancée de monitoring sécurité basée sur Elastic Stack (9.0.2), orientée plateforme avec focus particulier sur :
+Ce référentiel contient la documentation complète de notre plateforme de gestion des informations et événements de sécurité (SIEM) d'entreprise basée sur la pile ELK_GT (Elastic Stack 9.0.2).
 
-- La sécurité de l'infrastructure
-- La sécurité Office 365
-- La corrélation multi-plateformes
-- Le threat hunting proactif
+## 🎯 Public Cible
 
-## 🏗️ Architecture Platform-Centric
+- **Administrateurs SIEM** : Configuration, maintenance et procédures de déploiement de la plateforme
+- **Analystes Sécurité** : Détection de menaces, réponse aux incidents et workflows de chasse aux menaces  
+- **Équipes Opérations** : Surveillance infrastructure, optimisation performance et dépannage
+- **Nouveaux Membres** : Documentation d'accueil et matériels de formation
+
+## 🛡️ Vue d'Ensemble de la Plateforme
+
+Solution de surveillance de sécurité de niveau entreprise avec architecture centrée sur les plateformes :
+
+- **Sécurité Infrastructure** : Surveillance système et détection de menaces
+- **Sécurité Office 365** : Protection de la suite de productivité cloud
+- **Corrélation Multi-Plateformes** : Analyse de menaces transversale
+- **Chasse Proactive aux Menaces** : Détection de menaces persistantes avancées
+
+## 🏗️ Architecture Centrée sur les Plateformes
 
 ```plaintext
 ELK_GT/
-├── 01-architecture/            # Documentation technique
-│   ├── component_descriptions/ # Architecture détaillée
-│   └── infrastructure_diagrams/# Diagrammes techniques
-├── 02-config/                 # Configuration ELK
-│   ├── elasticsearch/         # Configuration ES
-│   ├── logstash/             # Pipelines et filtres
-│   ├── kibana/               # Configuration Kibana
-│   └── fleet/                # Gestion des agents
-├── 04-security/              # 🔒 Sécurité (platform-centric)
-│   ├── infrastructure-security/# Sécurité infrastructure
-│   │   ├── dashboards/       # Visualisation sécurité
-│   │   └── detection-rules/  # Règles de détection
-│   ├── o365-security/        # Sécurité Office 365
-│   │   ├── dashboards/       # Tableaux de bord O365
-│   │   └── detection-rules/  # Détection O365
-│   ├── correlation-engine/    # Corrélation avancée
-│   │   └── multi-platform-rules/ # Règles cross-platform
-│   ├── intelligence/         # Threat Intelligence
-│   └── hunting/             # Threat Hunting
-├── 05-monitoring/            # 📊 Monitoring technique
-│   ├── performance/         # Métriques performance
-│   ├── infrastructure/      # Santé infrastructure
-│   └── system/             # Monitoring système
-└── 06-operations/           # 🔧 Opérations
-    ├── runbooks/           # Procédures
-    └── automation/         # Scripts
+├── 01-architecture/              # 📐 Documentation Technique
+│   ├── component_descriptions/   # Spécifications architecture détaillées
+│   └── infrastructure_diagrams/  # Diagrammes réseau et système
+├── 02-config/                   # ⚙️ Configuration Pile ELK
+│   ├── elasticsearch/           # Configuration cluster ES
+│   ├── logstash/               # Pipelines traitement données
+│   ├── kibana/                 # Paramètres interface web
+│   └── fleet/                  # Gestion agents
+├── 04-security/                # 🔒 Sécurité Centrée Plateformes
+│   ├── infrastructure-security/ # Sécurité système & réseau
+│   │   ├── dashboards/         # Tableaux de bord surveillance infrastructure
+│   │   └── detection-rules/    # Règles détection niveau système
+│   ├── o365-security/          # Sécurité productivité cloud
+│   │   ├── dashboards/         # Tableaux de bord surveillance Office 365
+│   │   └── detection-rules/    # Règles détection spécifiques O365
+│   ├── correlation-engine/     # Analyse multi-plateformes
+│   │   └── multi-platform-rules/ # Corrélations transversales
+│   ├── intelligence/           # Flux renseignement menaces
+│   └── hunting/               # Chasse proactive menaces
+├── 05-monitoring/              # 📊 Santé & Performance Plateforme
+│   ├── performance/           # Métriques performance et références
+│   ├── infrastructure/        # Surveillance santé infrastructure
+│   └── system/               # Surveillance niveau système
+└── 06-operations/             # 🔧 Opérations & Maintenance
+    ├── runbooks/             # Procédures opérationnelles standard
+    └── automation/           # Scripts maintenance automatisée
 ```
 
-## 🎯 Points Forts
+## 🔧 Pile Technique
 
-### 1. Architecture Platform-Centric
+### Composants Principaux
 
-- Organisation par plateforme (infrastructure, O365)
-- Pas de dashboards génériques
-- Spécialisation des équipes
-- Structure extensible
+- **Elasticsearch 9.0.2** : Moteur de recherche et d'analytique distribué (cluster 2 nœuds)
+- **Logstash** : Pipeline traitement données avec configurations spécialisées O365
+- **Kibana** : Interface web avec capacités de gestion Fleet
+- **Fleet Server** : Gestion centralisée et déploiement d'agents
 
-### 2. Stack Technique
+### Prérequis Infrastructure
 
-- **Elasticsearch** : Cluster 2 nœuds (9.0.2)
-- **Logstash** : Pipelines O365 optimisés
-- **Kibana** : Interface et Fleet
-- **Fleet Server** : Gestion centralisée
-
-### 3. Intégrations
-
-- Office 365 (9 intégrations)
-- Infrastructure (Métriques système)
-- Threat Intelligence
-- APM et logs
-
-## 🚀 Démarrage Rapide
-
-### 1. Prérequis
-
-```bash
-# Ressources minimales par nœud
-CPU: 4 cores
-RAM: 16 GB
-Disk: 100 GB SSD
+```yaml
+Minimum par nœud :
+  CPU: 4 cœurs (8+ recommandé)
+  RAM: 16 GB (32+ recommandé production)
+  Stockage: 100 GB SSD (500+ GB production)
+  Réseau: 1 Gbps
 Docker: 20.10+
 ```
 
-### 2. Installation
+### Intégrations
 
-```bash
-# Cloner le repo
-git clone https://github.com/org/ELK_GT
-cd ELK_GT
+- **Office 365** : 9 intégrations spécialisées (Exchange, SharePoint, Teams, etc.)
+- **Surveillance Infrastructure** : Métriques système, logs et APM
+- **Renseignement Menaces** : Flux de menaces externes et internes
+- **Applications Personnalisées** : Ingestion logs basée API
 
-# Démarrer avec Docker Compose
-docker-compose up -d
-```
+## 🚀 Navigation Rapide
 
-### 3. Configuration Initiale
+### Accès aux Interfaces
 
-1. **Infrastructure** : [`04-security/infrastructure-security/README.md`](04-security/infrastructure-security/README.md)
-2. **Office 365** : [`04-security/o365-security/README.md`](04-security/o365-security/README.md)
-3. **Corrélation** : [`04-security/correlation-engine/README.md`](04-security/correlation-engine/README.md)
+- **Interface Kibana** : `http://localhost:5601` (admin/changeme)
+- **Gestion Fleet** : `http://localhost:5601/app/fleet`
+- **Surveillance Cluster** : `curl localhost:9200/_cluster/health`
 
-## 📚 Documentation
+### Configuration par Plateforme
 
-### Guides Essentiels
+#### Sécurité Infrastructure
 
-- [Architecture Détaillée](01-architecture/README.md)
-- [Guide de Configuration](02-config/CONFIG.md)
-- [Framework Sécurité](04-security/SECURITY.md)
-- [Structure Platform-Centric](04-security/PLATFORM_CENTRIC_DETECTION_RULES.md)
+- Configuration : [`04-security/infrastructure-security/README.md`](04-security/infrastructure-security/README.md)
+- Import Tableaux de Bord : [`04-security/infrastructure-security/dashboards/`](04-security/infrastructure-security/dashboards/)
+- Règles de Détection : [`04-security/infrastructure-security/detection-rules/`](04-security/infrastructure-security/detection-rules/)
 
-### Documentation Technique
+#### Sécurité Office 365
 
-- [Elastic Stack](01-architecture/component_descriptions/README.md)
-- [Pipelines Logstash](02-config/logstash/README.md)
-- [Intégration O365](04-security/o365-security/README.md)
-- [Dashboards](06-reference/standards/CONVENTION_NOMMAGE_DASHBOARDS.md)
+- Configuration Intégration : [`04-security/o365-security/README.md`](04-security/o365-security/README.md)
+- Configuration API : [`02-config/logstash/o365-pipelines.conf`](02-config/logstash/o365-pipelines.conf)
+- Configuration Tableaux de Bord : [`04-security/o365-security/dashboards/`](04-security/o365-security/dashboards/)
 
-## 🛠️ Maintenance
+## 📚 Documentation & Procédures
 
-### Monitoring
+### Documentation Essentielle
 
-- [Performance](05-monitoring/performance/README.md)
-- [Infrastructure](05-monitoring/infrastructure/README.md)
-- [Système](05-monitoring/system/README.md)
+| Document | Objectif | Public |
+|----------|----------|--------|
+| [Vue d'ensemble Architecture](01-architecture/README.md) | Conception système et composants | Administrateurs, Architectes |
+| [Guide Configuration](02-config/CONFIG.md) | Procédures déploiement et configuration | Administrateurs |
+| [Framework Sécurité](04-security/SECURITY.md) | Politiques et procédures sécurité | Équipe Sécurité |
+| [Structure Centrée Plateformes](04-security/PLATFORM_CENTRIC_DETECTION_RULES.md) | Organisation règles détection | Analystes Sécurité |
+| [Runbooks Opérationnels](06-operations/runbooks/README.md) | Procédures opérationnelles standard | Équipe Opérations |
 
-### Opérations
+### Normes & Conventions
 
-- [Runbooks](06-operations/runbooks/README.md)
-- [Automatisation](06-operations/automation/README.md)
-- [Backup](06-operations/backup-procedures/README.md)
+- [Convention Nommage Tableaux de Bord](06-reference/standards/CONVENTION_NOMMAGE_DASHBOARDS.md)
+- [Standard Tags Kibana](06-reference/standards/CONVENTION_TAGS_DASHBOARDS_KIBANA.md)  
+- [Modèle Règle Observabilité](06-reference/standards/TEMPLATE_SIGMA_OBSERVABILITE.yaml)
+- [Modèle Documentation Tableau de Bord](06-reference/standards/TEMPLATE_DOCUMENTATION_DASHBOARD.md)
 
-## 🤝 Contribution
+## 🔍 Cas d'Usage Sécurité
 
-1. **Standards**
-   
-   - Suivre les conventions de nommage
-   - Respecter l'approche platform-centric
-   - Documenter les changements
+### Protection Infrastructure
 
-2. **Processus**
-   
-   - Tester en environnement de dev
-   - Valider les dashboards
-   - Vérifier les règles de détection
+- Surveillance connexions système et détection d'anomalies
+- Analyse trafic réseau et identification menaces
+- Contrôle accès ressources et détection élévation privilèges
+- Indicateurs malware et ransomware
 
-3. **Documentation**
-   
-   - Maintenir les READMEs à jour
-   - Documenter les cas d'usage
-   - Partager les bonnes pratiques
+### Protection Office 365
 
-## 📋 Standards & Conventions
+- Sécurité email et détection phishing
+- Surveillance accès SharePoint et OneDrive
+- Sécurité collaboration Teams
+- Gestion identité et accès
 
-- [Convention de Nommage Dashboards](06-reference/standards/CONVENTION_NOMMAGE_DASHBOARDS.md)
-- [Tags Kibana](06-reference/standards/CONVENTION_TAGS_DASHBOARDS_KIBANA.md)
-- [Template Observabilité](06-reference/standards/TEMPLATE_SIGMA_OBSERVABILITE.yaml)
+### Analyse Transversale
 
-## 📈 Évolution
+- Détection attaques multi-vecteurs
+- Chasse menaces persistantes avancées (APT)
+- Identification menaces internes
+- Surveillance conformité et rapports
 
-Consultez notre [PLATFORM_CENTRIC_TRANSFORMATION_COMPLETE.md](PLATFORM_CENTRIC_TRANSFORMATION_COMPLETE.md) pour comprendre :
 
-- La transformation platform-centric
-- Les bénéfices réalisés
-- Les prochaines étapes
+### Standards Documentation
 
-## 📞 Support
+- Suivre les [Standards Documentation](06-reference/standards/documentation-standards.md)
+- Utiliser principes organisation centrée plateformes
+- Inclure exemples pratiques et runbooks
+- Maintenir précision technique et focus opérationnel
 
-- **Documentation** : Voir [`/docs`](docs/)
-- **Issues** : Utiliser le bug tracker
-- **Questions** : Contacter l'équipe sécurité
+### Processus de Modification
+
+1. **Processus Révision** : Toutes modifications révisées par experts métier
+2. **Exigences Tests** : Tester procédures en environnement développement
+3. **Workflow Approbation** : Révision technique → Révision sécurité → Approbation
+4. **Documentation** : Mettre à jour runbooks et procédures pertinents
+
+### Directives Qualité
+
+- **Clarté** : Écrire pour professionnels techniques niveaux expérience variés
+- **Complétude** : Inclure dépannage, exemples et cas limites
+- **Maintenance** : Révisions régulières et mises à jour précision
+- **Accessibilité** : Documentation facilement découvrable et cherchable
+
+## 📈 Évolution Plateforme & Feuille de Route
+
+### Statut Actuel
+
+- **Maturité Plateforme** : Prêt production avec objectif disponibilité 99.9%
+- **Couverture Sécurité** : Infrastructure et O365 entièrement intégrés
+- **Préparation Équipe** : 12 analystes formés, 4 administrateurs plateforme
+
+### Améliorations à Venir
+
+
+
+### Vision Long Terme
+
+- Visibilité sécurité entreprise complète
+- Capacités réponse menaces automatisées  
+- Analytique sécurité prédictive
+- Rapports conformité sans intervention
+
+---
+
+## 📋 Liens de Référence Rapide
+
+### Usage Quotidien
+
+- [Tableau de Bord Kibana](http://localhost:5601) | [Gestion Fleet](http://localhost:5601/app/fleet)
+- [Tableaux de Bord Sécurité](04-security/) | [Surveillance Performance](05-monitoring/)
+- [Runbook Quotidien](06-operations/runbooks/daily-operations.md)
+
+### Documentation
+
+- [Index Documentation Complète](docs/README.md)
+- [Référence API](docs/api-reference.md)  
+- [Guide Dépannage](docs/troubleshooting.md)

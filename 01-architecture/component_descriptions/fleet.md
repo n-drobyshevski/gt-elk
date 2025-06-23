@@ -1,8 +1,9 @@
-# Fleet - Gestion centralisée des agents Elastic
+# Fleet Server - Gestion Sécurisée des Agents
 
 ## Sommaire
 
 - [Vue d'ensemble](#vue-densemble)
+- [Configuration TLS](#configuration-tls)
 - [Architecture Fleet Server](#architecture-fleet-server)
 - [Gestion des politiques](#gestion-des-politiques)
 - [Sécurité et inscription](#sécurité-et-inscription)
@@ -24,6 +25,37 @@ Notre déploiement Fleet est intégré à notre cluster Elasticsearch à deux n�
 - Les agents Elastic pour l'intégration Office 365
 - Metricbeat pour la surveillance du cluster
 - Les agents système sur les différents hôtes
+
+## Configuration TLS
+
+### Communications Sécurisées
+
+- **Port** : 8220 avec TLS obligatoire
+- **Certificats** : Certificat dédié Fleet Server
+- **Authentification** : Token de service pour accès Elasticsearch
+
+### Variables d'Environnement
+
+```yaml
+FLEET_SERVER_ENABLE: "1"
+FLEET_SERVER_ELASTICSEARCH_HOST: "https://elasticsearch:9200"
+FLEET_SERVER_ELASTICSEARCH_CA: "/usr/share/fleet-server/config/certs/ca/ca.crt"
+FLEET_SERVER_SERVICE_TOKEN: "${FLEET_TOKEN}"
+FLEET_SERVER_CERT: "/usr/share/fleet-server/config/certs/fleet-server/fleet-server.crt"
+FLEET_SERVER_CERT_KEY: "/usr/share/fleet-server/config/certs/fleet-server/fleet-server.key"
+```
+
+### Enrôlement des Agents
+
+Les agents Elastic doivent utiliser le certificat CA pour valider la connexion au Fleet Server :
+
+```bash
+# Exemple enrôlement agent avec TLS
+elastic-agent enroll \
+  --url=https://fleet-server:8220 \
+  --enrollment-token=<TOKEN> \
+  --certificate-authorities=/path/to/ca.crt
+```
 
 ## Architecture Fleet Server
 

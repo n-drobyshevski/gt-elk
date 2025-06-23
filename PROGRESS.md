@@ -1,148 +1,148 @@
-# 📈 Suivi du Projet ELK_GT
+# 📈 Suivi du projet ELK
+| Domaine | Statut |
+|---------|---------|
+| Infrastructure ELK | ✅ ok |
+| Fleet Server & Agents | ✅ ok |
+| Collecte Métriques | ✅ ok|
+| Intégration O365 | ✅ ok |
+| Documentation Projet | 🔨 **Développement** |
+| Dashboards Monitoring | 🔨 **Création** |
+| Contrôles Logs | 📋 **Planifié** |
+| Détection O365 | 📅 **À venir** |
 
 ## 🎯 État Global du Projet
 
 ### Phase Actuelle
-
-**Platform-Centric Transformation** - ✅ COMPLÉTÉE (23 juin 2025)
-
-### Statut par Domaine
-
-| Domaine                       | État | Progression |
-| ----------------------------- | ---- | ----------- |
-| Architecture Platform-Centric | ✅    | 100%        |
-| Infrastructure Security       | 🟢   | 90%         |
-| O365 Security                 | 🟢   | 85%         |
-| Correlation Engine            | 🟡   | 70%         |
-| Threat Intelligence           | 🟡   | 60%         |
-| Threat Hunting                | 🟡   | 50%         |
+**Infrastructure & Documentation** - EN COURS (23 juin 2025)
 
 ---
 
-## ✅ Réalisations Majeures
+## ✅ Réalisations Accomplies
 
-### Architecture & Infrastructure
+### Infrastructure Technique
+- [x] Installation et configuration ELK Stack 9.0.2
+- [x] Configuration Fleet Server opérationnel
+- [x] Déploiement agents de collecte métriques infrastructure
+- [x] Intégration agent Microsoft 365 active
+- [x] Validation connectivité et ingestion données
 
-- [x] Migration vers structure platform-centric pure
-- [x] Déploiement Elastic Stack 9.0.2 (Docker Compose)
-- [x] Configuration Fleet Server pour gestion centralisée
-- [x] Mise en place pipelines Logstash O365
-
-### Sécurité Infrastructure
-
-- [x] Dashboards infrastructure-security/
-- [x] Règles de détection spécifiques infrastructure
-- [x] Documentation structure platform-centric
-- [x] Standards et conventions de nommage
-
-### Sécurité O365
-
-- [x] Dashboards o365-security/
-- [x] Règles de détection O365
-- [x] Intégration Exchange Online
-- [x] Pipeline parsing ECS-compatible
-
-### Correlation Engine
-
-- [x] Structure multi-platform-rules
-- [x] Framework de corrélation cross-platform
-- [x] Documentation corrélation avancée
-- [x] Templates règles corrélation
+### Documentation & Standards
+- [x] Structure projet platform-centric
+- [x] Conventions nommage dashboards
+- [x] Standards tags Kibana
+- [x] Templates documentation
+- [x] Guides configuration de base
 
 ---
 
-## 🚧 Travaux en Cours
+## Travaux en Cours
 
-### Threat Intelligence
+### Documentation Projet
+**Statut**: **Développement**
 
-- [ ] Intégration sources OSINT
-- [ ] Enrichissement GeoIP + AbuseIPDB
-- [ ] Configuration MISP
-- [ ] Playbooks d'exploitation TI
+- [x] Templates et standards ✅
+- [ ] Documentation technique 📝 (rédaction)
 
-### Threat Hunting
+### Dashboards & Alertes Monitoring
+**Statut**: **Création en Cours**
 
-- [ ] Développement playbooks hunting
-- [ ] Scripts d'automatisation hunting
-- [ ] Requêtes de recherche KQL/ES
-- [ ] Documentation méthodologie
-
-### Monitoring & Performance
-
-- [ ] Métriques Metricbeat
-- [ ] Dashboards performance
-- [ ] Alerting basé sur seuils
-- [ ] Documentation monitoring
+- [ ] Dashboards surveillance stack ELK (développement)
+- [ ] Métriques performance système (en cours)
+- [ ] Alertes santé infrastructure (conception)
+- [ ] Tableaux de bord Fleet Server (planifié)
 
 ---
 
-## 🎯 Prochaines Étapes (Q3 2025)
+## État Détaillé par Composant
 
-### Court Terme (1-2 mois)
+### En Développement Actif
 
-1. Finaliser intégration threat intelligence
-2. Déployer playbooks threat hunting
-3. Optimiser performance pipelines
-4. Compléter documentation technique
+#### Documentation Technique
+**Statut**: Rédaction |  **ETA**: ~
 
-### Moyen Terme (3-4 mois)
+- [x] Structure et templates
+- [x] Standards de nommage
+- [ ] Documentation composants ELK
+- [ ] Guides d'installation et configuration
+- [ ] Procédures de maintenance
 
-1. Ajouter plateformes Azure et AWS
-2. Développer corrélation avancée
-3. Automatiser reporting sécurité
-4. Former équipes à la nouvelle structure
+#### Dashboards Monitoring Stack
+**Statut**: Développement | **ETA**: 1-2 jours
 
-### Long Terme (6+ mois)
+- [x] Conception architecture 
+- [ ] Dashboard performance Elasticsearch
+- [ ] Dashboard métriques Fleet Server
+- [ ] Alertes critiques infrastructure
 
-1. Intelligence artificielle pour détection
-2. Automatisation complète response
-3. Extension capacités hunting
-4. Framework d'audit continu
+### 📋 En Planification
 
----
+#### Contrôles Qualité Logs
 
-## 📊 Métriques Projet
+**Statut**: Spécification | **ETA**: 1 semaine
 
-### Couverture
+- [ ] Spécifications contrôles complétude 
+- [ ] Règles détection anomalies volume 
+- [ ] Alertes sur lacunes temporelles 
+- [ ] Dashboard supervision ingestion 
 
-- Dashboards: 45/50 planifiés
-- Règles détection: 120/150 planifiées
-- Playbooks: 15/25 planifiés
-- Documentation: 85% complétée
+#### Détection Sécurité O365
 
-### Performance
+**Statut**: Conception | **ETA**: 1 semaine
 
-- Temps ingestion: < 2min
-- Latence alertes: < 30sec
-- Précision détection: 92%
-- Faux positifs: < 5%
-
----
-
-## 📝 Notes & Observations
-
-### Points Forts
-
-- Structure platform-centric claire
-- Excellente séparation des responsabilités
-- Documentation exhaustive
-- Framework extensible
-
-### Points d'Attention
-
-- Formation équipes nécessaire
-- Optimisation performance requise
-- Documentation à maintenir
-- Tests à automatiser
+- [ ] Analyse sources de données O365 
+- [ ] Définition règles authentification 
+- [ ] Règles activités administratives 
+- [ ] Dashboard détection O365 
 
 ---
 
-## 📅 Mises à Jour
+## Prochaines Étapes Planifiées
 
-- **23/06/2025**: Complétion transformation platform-centric
-- **22/06/2025**: Migration dashboards terminée
-- **21/06/2025**: Nouvelle structure detection-rules
-- **20/06/2025**: Framework corrélation déployé
+### Phase 1 - Contrôle Qualité Logs 
+
+1. **Contrôles Complétude Logs**
+    - Surveillance volume ingestion par source
+    - Détection lacunes temporelles
+    - Alertes sur absence de données
+
+2. **Détection Anomalies Logs**
+    - Analyse patterns de volume
+    - Détection variations inhabituelles
+    - Alertes sur comportements suspects
+
+### Phase 2 - Détection Sécurité O365 
+
+1. **Règles Détection O365**
+    - Authentifications suspectes
+    - Activités administratives
+    - Accès anormaux Exchange/SharePoint
+
+2. **Alertes Sécurité O365**
+    - Tentatives intrusion
+    - Modifications configuration
+    - Activités à risque
+
+### Phase 3 - Extensions Futures
+
+1. **Détection Active Directory**
+    - Surveillance comptes privilégiés
+    - Détection mouvements latéraux
+    - Analyse authentifications
+
+2. **Détection EDR**
+    - Corrélation événements endpoints
+    - Analyse comportementale
+    - Détection malwares avancés
+
+
+
+## 📅 Chronologie Récente
+
+- **23/06/2025**: Finalisation standards documentation
+- **23/06/2025**: Templates dashboards créés
+- **20/06/2025**: Intégration O365 validée
+- **18/06/2025**: Fleet Server opérationnel
+- **19/06/2025**: Installation ELK terminée
 
 ---
 

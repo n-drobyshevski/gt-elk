@@ -1,60 +1,79 @@
 ---
 id: e6eb6789-46e3-4b84-b845-820131999af8
-title: Architecture des Flux de Données ELK avec Fleet Server
+title: Architecture Sécurisée ELK avec TLS (docker-elk TLS)
 ---
 flowchart LR
-    %% Définition des styles pour thème sombre
+    %% Définition des styles pour thème sombre avec éléments TLS
     classDef source fill:#2a1626,stroke:#ff69b4,stroke-width:2px,color:#ff69b4;
     classDef agent fill:#3d3000,stroke:#ffd700,stroke-width:2px,color:#ffd700;
     classDef fleet fill:#331f00,stroke:#ff8c00,stroke-width:2px,color:#ff8c00;
     classDef storage fill:#004d1a,stroke:#00fa9a,stroke-width:2px,color:#00fa9a;
     classDef monitor fill:#003366,stroke:#00bfff,stroke-width:2px,color:#00bfff;
     classDef visual fill:#330000,stroke:#ff6b6b,stroke-width:2px,color:#ff6b6b;
+    classDef security fill:#4a1a4a,stroke:#ff00ff,stroke-width:3px,color:#ff00ff;
 
     %% Sources de données externes
-    O365[("Office 365<br/>Management API")]:::source
-    Azure[("Azure AD")]:::source
+    O365[("Office 365<br/>Management API<br/>HTTPS")]:::source
+    Azure[("Azure AD<br/>Authentication")]:::source
     SYS[("Métriques<br/>Système")]:::source
 
-    %% Infrastructure Docker-ELK
-    subgraph Docker-ELK["Infrastructure Docker-ELK"]
+    %% Infrastructure Docker-ELK Sécurisée
+    subgraph Docker-ELK["Infrastructure Docker-ELK TLS"]
         direction TB
+        
+        subgraph Certs["Certificats TLS"]
+            CA["CA Autorité<br/>X.509"]:::security
+            TLSService["Service TLS<br/>docker-elk"]:::security
+        end
         
         subgraph Agents["Elastic Agents"]
             direction LR
-            O365Agent["O365 Integration<br/>Agent"]:::agent
-            MB["Metricbeat<br/>Agent"]:::monitor
+            O365Agent["O365 Integration<br/>Agent + TLS"]:::agent
+            MB["Metricbeat<br/>Agent + TLS"]:::monitor
         end
 
-        subgraph Management["Gestion des Agents"]
-            FS["Fleet Server"]:::fleet
+        subgraph Management["Fleet Server TLS"]
+            FS["Fleet Server<br/>Port 8220 TLS"]:::fleet
         end
 
-        subgraph Storage["Cluster Elasticsearch"]
+        subgraph Storage["Cluster Elasticsearch TLS"]
             direction LR
-            ES1["ES Node 1<br/>(Master + Data)"]:::storage
-            ES2["ES Node 2<br/>(Data)"]:::storage
+            ES1["ES Node 1<br/>(Master + Data)<br/>Port 9200/9300 TLS"]:::storage
+            ES2["ES Node 2<br/>(Data)<br/>Port 9200/9300 TLS"]:::storage
         end
 
-        KB["Kibana<br/>Visualisation"]:::visual
+        KB["Kibana TLS<br/>Port 5601 HTTPS"]:::visual
+        LS["Logstash TLS<br/>Ports 5044/50000/9600"]:::monitor
     end
 
-    %% Flux d'authentification
-    Azure -->|"Auth (Client ID,<br/>Secret)"| O365Agent
+    %% Flux d'authentification sécurisé
+    Azure -->|"HTTPS + OAuth2"| O365Agent
     
-    %% Flux de données
-    O365 -->|"9 intégrations"| O365Agent
-    SYS -->|"Métriques système"| MB
+    %% Flux de données sécurisé
+    O365 -->|"HTTPS API + 9 intégrations"| O365Agent
+    SYS -->|"Métriques TLS"| MB
     
-    %% Gestion des agents
-    FS -->|"Déploiement<br/>policies"| O365Agent
-    FS -->|"Configuration"| MB
+    %% Gestion sécurisée des agents
+    CA -.->|"Certificats"| FS
+    CA -.->|"Certificats"| ES1
+    CA -.->|"Certificats"| ES2
+    CA -.->|"Certificats"| KB
+    CA -.->|"Certificats"| LS
+    CA -.->|"Certificats"| O365Agent
+    CA -.->|"Certificats"| MB
     
-    %% Stockage et visualisation
-    O365Agent -->|"Logs ECS"| ES1 & ES2
-    MB -->|"Métriques"| ES1
-    ES1 <-->|"Réplication"| ES2
-    ES1 & ES2 -->|"Données<br/>indexées"| KB
+    FS -->|"TLS 8220<br/>Déploiement policies"| O365Agent
+    FS -->|"TLS 8220<br/>Configuration"| MB
     
-    %% Gestion via Kibana
-    KB -->|"Gestion des<br/>intégrations"| FS
+    %% Stockage et visualisation sécurisé
+    O365Agent -->|"TLS 9200<br/>Logs ECS"| ES1
+    O365Agent -->|"TLS 9200<br/>Logs ECS"| ES2
+    MB -->|"TLS 9200<br/>Métriques"| ES1
+    LS -->|"TLS 9200<br/>Données"| ES1
+    LS -->|"TLS 9200<br/>Données"| ES2
+    ES1 <-->|"TLS 9300<br/>Réplication"| ES2
+    ES1 -->|"TLS 9200<br/>Requêtes"| KB
+    ES2 -->|"TLS 9200<br/>Requêtes"| KB
+    
+    %% Gestion via Kibana sécurisé
+    KB -->|"HTTPS 5601<br/>Fleet Management"| FS

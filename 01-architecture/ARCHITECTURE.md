@@ -16,15 +16,24 @@ Ce dossier `architecture/` contient toute la documentation technique relative à
 
 ### Contexte Technique
 
-- **Base de déploiement** : Repository [deviantony/docker-elk](https://github.com/deviantony/docker-elk)
+- **Base de déploiement** : Repository [deviantony/docker-elk](https://github.com/deviantony/docker-elk) (branche TLS)
 - **Version Elastic** : 9.0.2
+- **Sécurité** : Communications TLS complètes entre tous les composants
+- **Architecture TLS** :
+  - Certificats X.509 auto-générés pour tous les services
+  - Autorité de certification (CA) dédiée
+  - Chiffrement complet des communications inter-services
+  - Authentification mutuelle entre composants
 - **Infrastructure** :
-  - Cluster Elasticsearch à 2 nœuds (elasticsearch et elasticsearch02) sur une même VM
-  - Conteneurs Docker orchestrés via docker-compose
-  - Fleet Server pour la gestion des agents Elastic
-- **Monitoring** : Metricbeat pour la collecte des métriques
-- **Sources de données** : 9 intégrations Office 365 gérées via Fleet Server
-- **Gestion des agents** : Fleet Server pour le déploiement et la mise à jour des policies
+  - Cluster Elasticsearch à 2 nœuds avec TLS transport (ports 9200/9300)
+  - Conteneurs Docker orchestrés via docker-compose avec certificats partagés
+  - Fleet Server sécurisé pour la gestion des agents (port 8220 TLS)
+  - Volume Docker persistent pour certificats (`certs` volume)
+- **Monitoring** : Metricbeat avec connexions TLS sécurisées
+- **Sources de données** : 9 intégrations Office 365 gérées via Fleet Server avec authentification Azure AD
+- **Gestion des agents** : Fleet Server pour déploiement sécurisé des policies et agents
+- **Authentification** : Utilisateurs intégrés Elastic (elastic, kibana_system, logstash_internal) avec rotation des mots de passe
+- **Déploiement sécurisé** : Processus en 3 étapes (TLS → Setup → Stack) pour initialisation complète
 
 ## Structure du Dossier
 
@@ -48,61 +57,229 @@ architecture/
 
 ### Organisation des Diagrammes
 
-- **Format Draw.io** : Utilisé pour les schémas complexes et détaillés
-- **Format Mermaid** : Pour les diagrammes de flux et les représentations simples
+- **Format Mermaid** : Diagrammes de flux et architecture sécurisée TLS
+- **data_flow_mermaid.mmd** : Architecture complète avec flux de données TLS
+- **tls_certificates_architecture.mmd** : Détail de l'infrastructure des certificats
 - **Export PNG** : Versions statiques pour consultation rapide
 
-### Architecture Générale
+### Architecture Sécurisée TLS Complète
+
+Le diagramme principal ([data_flow_mermaid.mmd](infrastructure_diagrams/data_flow_mermaid.mmd)) illustre :
+
+- **Communications chiffrées** entre tous les composants
+- **Ports TLS** spécifiques à chaque service
+- **Flux d'authentification** Azure AD et certificats
+- **Gestion centralisée** via Fleet Server sécurisé
+
+### Architecture des Certificats TLS
+
+Le diagramme des certificats ([tls_certificates_architecture.mmd](infrastructure_diagrams/tls_certificates_architecture.mmd)) détaille :
+
+- **Autorité de Certification (CA)** auto-générée
+- **Distribution des certificats** via volume Docker
+- **Processus de génération** docker-elk TLS
+- **Commandes de maintenance** et re-génération
+
+### Processus de Déploiement Sécurisé
 
 ```mermaid
-graph TB
-    O365[Office 365] --> Logstash
-    Metricbeat --> ES1[Elasticsearch Node 1]
-    Logstash --> ES1
-    Logstash --> ES2[Elasticsearch Node 2]
-    ES1 <--> ES2
-    ES1 --> Kibana
-    ES2 --> Kibana
+sequenceDiagram
+    participant User as Administrateur
+    participant TLS as Service TLS
+    participant Setup as Service Setup
+    participant ES as Elasticsearch TLS
+    participant Fleet as Fleet Server TLS
+    participant Kibana as Kibana HTTPS
+
+    User->>TLS: docker compose up tls
+    TLS->>TLS: Génération CA + certificats
+    TLS->>User: Certificats prêts
+    
+    User->>Setup: docker compose up setup
+    Setup->>ES: Connexion TLS + init utilisateurs
+    ES->>Setup: Utilisateurs créés
+    Setup->>User: Setup complété
+    
+    User->>ES: docker compose up
+    ES->>Fleet: Activation TLS
+    ES->>Kibana: Activation HTTPS
+    Fleet->>Kibana: Management interface TLS
 ```
 
 ## Descriptions des Composants
 
-### Elasticsearch
+### Services d'Infrastructure TLS
 
-- **Configuration Cluster** :
-  - 2 nœuds (elasticsearch: master+data, elasticsearch02: data)
-  - Heap size: 2GB par nœud
-  - Discovery type: single-node (VM unique)
+#### Service TLS (docker-elk spécifique)
 
-### Logstash
+- **Génération certificats** : CA racine + certificats pour chaque service
+- **Volume persistant** : Stockage sécurisé des clés et certificats
+- **Commande** : `docker compose up tls` pour génération/re-génération
+- **Fichier instances.yml** : Configuration DNS/IP pour certificats
+- Documentation : [tls-service.md](component_descriptions/tls-service.md)
 
-- **Pipelines Office 365** :
-  - Mapping ECS (Elastic Common Schema)
+#### Service Setup (docker-elk spécifique)
 
-### Kibana
+- **Initialisation utilisateurs** : elastic, kibana_system, logstash_internal, beats_system
+- **Configuration TLS** : Validation connexions sécurisées Elasticsearch
+- **Commande** : `docker compose up setup` après génération TLS
+- **Variables .env** : Configuration mots de passe initiaux
+- Documentation : [setup-service.md](component_descriptions/setup-service.md)
 
-- **Organisation** :
-  - Dashboards standardisés
+### Elasticsearch (TLS Enabled)
+
+- **Configuration Cluster TLS** :
+  - 2 nœuds avec communication transport chiffrée (port 9300)
+  - API HTTPS sur port 9200 avec certificats X.509
+  - Heap size: 2GB par nœud (configurable via ES_JAVA_OPTS)
+  - **Sécurité** : X-Pack Security activé avec RBAC complet
+  - **Certificats** : elasticsearch.crt/key + validation CA
+- Documentation : [elasticsearch.md](component_descriptions/elasticsearch.md)
+
+### Logstash (TLS Outputs)
+
+- **Pipelines Sécurisés** :
+  - Connexions TLS vers Elasticsearch (authentification logstash_internal)
+  - Mapping ECS avec validation certificats CA
+  - **Ports** : 5044 (Beats TLS), 50000 (TCP), 9600 (monitoring API)
+  - **Configuration** : SSL/TLS pour tous les outputs Elasticsearch
+- Documentation : [logstash.md](component_descriptions/logstash.md)
+
+### Kibana (HTTPS Interface)
+
+- **Interface Web Sécurisée** :
+  - HTTPS sur port 5601 avec certificat kibana.crt/key
+  - Authentification intégrée utilisateurs Elasticsearch
+  - **Fleet Management** : Interface TLS pour gestion agents
+  - **Session sécurisée** : Cookies HTTPS et timeout configurables
+- Documentation : [kibana.md](component_descriptions/kibana.md)
+
+### Fleet Server (TLS Management)
+
+- **Gestion Agents Sécurisée** :
+  - Communications TLS sur port 8220 (fleet-server.crt/key)
+  - Enrôlement agents avec token + validation CA
+  - **Policies** : Déploiement sécurisé des configurations O365
+  - **Monitoring** : Surveillance agents avec authentification mutuelle
+- Documentation : [fleet.md](component_descriptions/fleet.md)
+
+### Metricbeat (TLS Monitoring)
+
+- **Surveillance Infrastructure** :
+  - Connexions TLS vers Elasticsearch (utilisateur beats_system)
+  - Métriques Docker avec validation certificats
+  - **Modules** : Docker, System, Elasticsearch avec TLS
+- Documentation : [metricbeat.md](component_descriptions/metricbeat.md)
 
 ## Détails de Déploiement
 
-### Configuration Docker
+### Processus de Déploiement docker-elk TLS
 
-Extrait du `docker-compose.yml` pour les services additionnels :
+Le déploiement suit un processus en 3 étapes spécifique au projet docker-elk avec TLS :
+
+```bash
+# 1. Génération des certificats TLS
+git clone --branch tls https://github.com/deviantony/docker-elk.git
+cd docker-elk
+docker compose up tls
+
+# 2. Initialisation des utilisateurs Elasticsearch
+docker compose up setup
+
+# 3. Démarrage de tous les services
+docker compose up -d
+```
+
+### Configuration Docker-Compose TLS
+
+#### Service TLS (Génération Certificats)
 
 ```yaml
-  elasticsearch2:
-    build:
-      context: elasticsearch/
-      args:
-        ELASTIC_VERSION: 9.0.2
-    volumes:
-      - ./elasticsearch/config/elasticsearch2.yml:/usr/share/elasticsearch/config/elasticsearch.yml
-      - elasticsearch2:/usr/share/elasticsearch/data
-    environment:
-      ES_JAVA_OPTS: "-Xmx4g -Xms4g"
-      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
-      discovery.type: single-node
+tls:
+  image: elasticsearch:9.0.2
+  command: >
+    bash -c '
+      if [[ ! -f config/certs/ca.zip ]]; then
+        echo "Creating CA";
+        bin/elasticsearch-certutil ca --silent --pem -out config/certs/ca.zip;
+        unzip config/certs/ca.zip -d config/certs;
+      fi;
+      if [[ ! -f config/certs/certs.zip ]]; then
+        echo "Creating certs";
+        bin/elasticsearch-certutil cert --silent --pem -out config/certs/certs.zip \
+          --in config/certs/instances.yml \
+          --ca-cert config/certs/ca/ca.crt \
+          --ca-key config/certs/ca/ca.key;
+        unzip config/certs/certs.zip -d config/certs;
+      fi;
+      chown -R root:root config/certs;
+      find . -type d -exec chmod 755 \{\} \;;
+      find . -type f -exec chmod 644 \{\} \;;
+      tail -f /dev/null;
+    '
+  volumes:
+    - certs:/usr/share/elasticsearch/config/certs
+```
+
+#### Service Setup (Initialisation Utilisateurs)
+
+```yaml
+setup:
+  image: elasticsearch:9.0.2
+  command: >
+    bash -c '
+      # Initialisation utilisateurs avec TLS
+      until curl -s --cacert config/certs/ca/ca.crt https://elasticsearch:9200 | grep -q "missing authentication credentials"; do sleep 30; done;
+      echo "Setting kibana_system password";
+      until curl -s -X POST --cacert config/certs/ca/ca.crt -u "elastic:${ELASTIC_PASSWORD}" \
+        -H "Content-Type: application/json" https://elasticsearch:9200/_security/user/kibana_system/_password \
+        -d "{\"password\":\"${KIBANA_SYSTEM_PASSWORD}\"}" | grep -q "^{}"; do sleep 10; done;
+      # ... autres utilisateurs
+    '
+  depends_on:
+    - elasticsearch
+```
+
+#### Elasticsearch avec Configuration TLS
+
+```yaml
+elasticsearch:
+  build:
+    context: elasticsearch/
+    args:
+      ELASTIC_VERSION: 9.0.2
+  volumes:
+    - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    - elasticsearch:/usr/share/elasticsearch/data
+    - certs:/usr/share/elasticsearch/config/certs
+  environment:
+    ES_JAVA_OPTS: "-Xmx2g -Xms2g"
+    ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+    xpack.license.self_generated.type: trial
+    xpack.security.enabled: true
+    xpack.security.http.ssl.enabled: true
+    xpack.security.http.ssl.key: certs/elasticsearch/elasticsearch.key
+    xpack.security.http.ssl.certificate: certs/elasticsearch/elasticsearch.crt
+    xpack.security.http.ssl.certificate_authorities: certs/ca/ca.crt
+    xpack.security.transport.ssl.enabled: true
+    xpack.security.transport.ssl.key: certs/elasticsearch/elasticsearch.key
+    xpack.security.transport.ssl.certificate: certs/elasticsearch/elasticsearch.crt
+    xpack.security.transport.ssl.certificate_authorities: certs/ca/ca.crt
+  ports:
+    - "9200:9200"
+    - "9300:9300"
+  depends_on:
+    - tls
+```
+      xpack.security.transport.ssl.enabled: true
+      xpack.security.transport.ssl.key: certs/elasticsearch/elasticsearch.key
+      xpack.security.transport.ssl.certificate: certs/elasticsearch/elasticsearch.crt
+      xpack.security.transport.ssl.certificate_authorities: certs/ca/ca.crt
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    depends_on:
+      - tls
 
   fleet-server:
     build:
@@ -111,57 +288,226 @@ Extrait du `docker-compose.yml` pour les services additionnels :
         ELASTIC_VERSION: 9.0.2
     volumes:
       - ./fleet-server/config/fleet-server.yml:/usr/share/fleet-server/fleet-server.yml
+      - certs:/usr/share/fleet-server/config/certs
     environment:
       FLEET_SERVER_ENABLE: "1"
-      FLEET_SERVER_ELASTICSEARCH_HOST: http://elasticsearch:9200
+      FLEET_SERVER_ELASTICSEARCH_HOST: https://elasticsearch:9200
+      FLEET_SERVER_ELASTICSEARCH_CA: /usr/share/fleet-server/config/certs/ca/ca.crt
       FLEET_SERVER_SERVICE_TOKEN: ${FLEET_TOKEN}
-    ports:
-      - "8220:8220"
-    depends_on:
-      - elasticsearch
+      FLEET_SERVER_CERT: /usr/share/fleet-server/config/certs/fleet-server/fleet-server.crt
+      FLEET_SERVER_CERT_KEY: /usr/share/fleet-server/config/certs/fleet-server/fleet-server.key
+    ports:### Variables d'Environnement (.env)
 
-  metricbeat:
-    build:
-      context: metricbeat/
-      args:
-        ELASTIC_VERSION: 9.0.2
-    user: root
-    volumes:
-      - ./metricbeat/config/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    depends_on:
-      - elasticsearch
+```env
+# Configuration TLS et authentification
+ELASTIC_PASSWORD=changeme
+KIBANA_SYSTEM_PASSWORD=changeme
+LOGSTASH_INTERNAL_PASSWORD=changeme
+BEATS_SYSTEM_PASSWORD=changeme
+FLEET_TOKEN=your-fleet-server-token
+
+# Configuration Elasticsearch
+ES_JAVA_OPTS=-Xmx2g -Xms2g
+ELASTIC_VERSION=9.0.2
+
+# Licence et sécurité
+XPACK_LICENSE_SELF_GENERATED_TYPE=trial
+XPACK_SECURITY_ENABLED=true
 ```
 
 ## Backup & Résilience
 
-### Stratégie de Snapshots
+### Stratégie TLS et Certificats
 
-- #todo : Ajouter la configuration des snapshots Elasticsearch
+#### Sauvegarde des Certificats
 
-### Résilience des Conteneurs
+```bash
+# Backup volume certificats
+docker run --rm -v docker-elk_certs:/certs -v $(pwd):/backup alpine \
+  tar czf /backup/certificates-backup-$(date +%Y%m%d).tar.gz -C /certs .
 
-- Monitoring via Metricbeat
+# Restauration certificats
+docker run --rm -v docker-elk_certs:/certs -v $(pwd):/backup alpine \
+  tar xzf /backup/certificates-backup-YYYYMMDD.tar.gz -C /certs
+```
+
+#### Rotation des Certificats
+
+- **Fréquence recommandée** : Tous les 6 mois
+- **Procédure d'urgence** : Re-génération en cas de compromission
+- **Commandes** :
+
+```bash
+# Nettoyage certificats existants
+find tls/certs -name ca -prune -or -type d -mindepth 1 -exec rm -rfv {} +
+
+# Re-génération complète
+docker compose up tls
+docker compose restart elasticsearch kibana fleet-server logstash
+```
+
+### Snapshots avec Authentification TLS
+
+#### Configuration Repository
+
+```bash
+# Création repository avec authentification TLS
+curl -X PUT "https://localhost:9200/_snapshot/backup_repository" \
+  --cacert tls/certs/ca/ca.crt \
+  -u elastic:${ELASTIC_PASSWORD} \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "type": "fs",
+    "settings": {
+      "location": "/mount/backups/elasticsearch_snapshots"
+    }
+  }'
+```
+
+#### Snapshot Automatisé
+
+```bash
+# Création snapshot avec TLS
+curl -X PUT "https://localhost:9200/_snapshot/backup_repository/snapshot_$(date +%Y%m%d)" \
+  --cacert tls/certs/ca/ca.crt \
+  -u elastic:${ELASTIC_PASSWORD} \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "indices": "o365-*,metricbeat-*",
+    "ignore_unavailable": true,
+    "include_global_state": false
+  }'
+```
+
+### Monitoring et Surveillance
+
+#### Health Check TLS
+
+```bash
+# Vérification santé cluster avec TLS
+curl -X GET "https://localhost:9200/_cluster/health?pretty" \
+  --cacert tls/certs/ca/ca.crt \
+  -u elastic:${ELASTIC_PASSWORD}
+
+# Vérification certificats
+openssl x509 -in tls/certs/elasticsearch/elasticsearch.crt -dates -noout
+```
+
+#### Surveillance Expiration Certificats
+
+- **Script de monitoring** : Alerte 30 jours avant expiration
+- **Métrique Metricbeat** : Intégration surveillance certificats
+- **Dashboard Kibana** : Vue centralisée santé TLS
 
 ## Mise à Jour & Contributions
 
-### Processus de Mise à Jour
+### Processus de Mise à Jour docker-elk TLS
 
-1. **Mise à jour de l'intégration O365**
-   
-   - Vérifier les nouvelles versions dans Kibana > Integrations
-   - Tester l'upgrade sur un agent de test
-   - Déployer via Fleet Server sur les autres agents
+#### Mise à Jour Version ELK
 
-2. **Mise à jour de la documentation**
-   
-   - Modifier les diagrammes Draw.io dans `infrastructure_diagrams/`
-   - Mettre à jour la documentation associée
-   - Valider les changements avec l'équipe
+```bash
+# 1. Sauvegarde certificats et données
+docker compose exec elasticsearch bin/elasticsearch-snapshot-repository create backup_repo
+docker run --rm -v docker-elk_certs:/certs -v $(pwd):/backup alpine \
+  tar czf /backup/certs-$(date +%Y%m%d).tar.gz -C /certs .
 
-3. **Procédure de validation**
-   
-   - Tests des nouvelles policies O365
+# 2. Mise à jour .env
+ELASTIC_VERSION=9.x.x
+
+# 3. Re-build et redémarrage
+docker compose build
+docker compose down
+docker compose up tls  # Re-génération certificats si nécessaire
+docker compose up setup
+docker compose up -d
+```
+
+#### Mise à Jour Intégrations O365
+
+1. **Via Interface Kibana (Recommandé)**
+   - Fleet > Integrations > Office 365 > Upgrade
+   - Test sur agent de développement
+   - Déploiement progressif via policies
+
+2. **Mise à Jour Documentation**
+   - Diagrammes Mermaid : `infrastructure_diagrams/*.mmd`
+   - Documentation composants : `component_descriptions/*.md`
+   - Validation architecture TLS après changements
+
+### Validation Post-Mise à Jour
+
+#### Tests de Connectivité TLS
+
+```bash
+# Test Elasticsearch HTTPS
+curl -X GET "https://localhost:9200/_cluster/health?pretty" \
+  --cacert tls/certs/ca/ca.crt -u elastic:${ELASTIC_PASSWORD}
+
+# Test Kibana HTTPS
+curl -X GET "https://localhost:5601/api/status" \
+  --cacert tls/certs/ca/ca.crt -u elastic:${ELASTIC_PASSWORD}
+
+# Test Fleet Server TLS
+curl -X GET "https://localhost:8220/api/status" \
+  --cacert tls/certs/ca/ca.crt
+```
+
+#### Validation Flux Données O365
+
+- Vérification ingestion logs Office 365
+- Test dashboards et visualisations
+- Validation alertes et détections
+
+### Standards de Contribution
+
+#### Documentation Architecture
+
+- **Diagrammes** : Format Mermaid pour compatibilité Git
+- **Descriptions** : Documentation minimale mais complète par composant
+- **TLS First** : Toujours documenter les aspects sécurité/certificats
+
+#### Nomenclature
+
+- **Fichiers** : `snake_case.md` pour documentation
+- **Diagrammes** : `component_description_type.mmd`
+- **IDs Mermaid** : Unique et descriptif (ex: `tls-certs-architecture`)
+
+---
+
+## Récapitulatif Architecture docker-elk TLS
+
+### Points Clés de Sécurité
+
+✅ **Communications chiffrées** : TLS obligatoire sur tous les ports (9200, 9300, 5601, 8220)  
+✅ **Authentification forte** : Utilisateurs dédiés avec rotation des mots de passe  
+✅ **Certificats managés** : CA auto-générée avec renouvellement documenté  
+✅ **Volume persistant** : Préservation des certificats entre redémarrages  
+✅ **Monitoring sécurisé** : Metricbeat avec authentification TLS  
+
+### Commandes Essentielles
+
+```bash
+# Déploiement initial complet
+git clone --branch tls https://github.com/deviantony/docker-elk.git
+cd docker-elk
+docker compose up tls && docker compose up setup && docker compose up -d
+
+# Maintenance certificats
+find tls/certs -name ca -prune -or -type d -mindepth 1 -exec rm -rfv {} +
+docker compose up tls
+
+# Monitoring santé TLS
+curl --cacert tls/certs/ca/ca.crt -u elastic:password https://localhost:9200/_cluster/health
+```
+
+### Architecture Validée
+
+Cette documentation reflète une architecture **docker-elk TLS production-ready** avec :
+- Sécurité transport end-to-end
+- Gestion automatisée des certificats  
+- Authentification centralisée
+- Monitoring et backup sécurisés
+- Procédures de maintenance documentées
    - Vérification des flux de données
    - Validation des dashboards Kibana
 
@@ -210,23 +556,30 @@ L'intégration Office 365 est basée sur l'utilisation de l'Office 365 Managemen
    - Transformation au format ECS (Elastic Common Schema)
    - Envoi direct vers Elasticsearch
 
-### Flux de Données
+### Flux de Données avec TLS
 
 ```mermaid
 sequenceDiagram
     participant O365 as Office 365 API
     participant Agent as Elastic Agent
-    participant Fleet as Fleet Server
-    participant ES as Elasticsearch
-    participant KB as Kibana
+    participant Fleet as Fleet Server (TLS 8220)
+    participant ES as Elasticsearch (TLS 9200)
+    participant KB as Kibana (TLS 5601)
 
-    Fleet->>Agent: Déploiement policy
-    loop Collecte périodique
-        Agent->>O365: Requête logs (Auth via Azure AD)
+    Note over Fleet,ES: Communications TLS chiffrées
+    
+    Fleet->>Agent: Déploiement policy (TLS)
+    Agent->>Fleet: Authentification token
+    
+    loop Collecte périodique sécurisée
+        Agent->>O365: Requête logs (HTTPS/Auth Azure AD)
         O365->>Agent: Logs d'activité
         Agent->>Agent: Transformation ECS
-        Agent->>ES: Indexation
+        Agent->>ES: Indexation (TLS + Auth)
     end
-    ES->>KB: Visualisation
-    Fleet->>Agent: Mise à jour policy (si nécessaire)
+    
+    ES->>KB: Visualisation (TLS)
+    Fleet->>Agent: Mise à jour policy (TLS si nécessaire)
+    
+    Note over Agent,ES: Authentification utilisateurs intégrés
 ```
