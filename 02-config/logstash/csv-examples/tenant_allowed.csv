@@ -1,0 +1,7 @@
+tenant,allowed
+contoso,US|GB|DE|FR|ES|IT
+fabrikam,FR|BE|LU|NL|DE|CH
+northwind,CA|US|MX
+acme,AU|NZ|SG|JP|KR|MY
+tech-corp,US|CA|GB|IE|DE
+globalcorp,US|GB|DE|FR|ES|IT|NL|BE|CH|AT

@@ -1,0 +1,42 @@
+# Configuration Multi-Pipeline Logstash pour l'Import des Listes Blanches O365
+# Fichier: /etc/logstash/pipelines.yml
+#
+# Cette configuration définit deux pipelines parallèles pour traiter
+# les listes blanches de pays autorisés pour les tenants et utilisateurs O365
+
+# Pipeline pour l'import des pays autorisés par tenant
+- pipeline.id: tenant-allowed
+  path.config: "/etc/logstash/pipelines.d/tenant_allowed.conf"
+  pipeline.workers: 1
+  pipeline.batch.size: 100
+  pipeline.batch.delay: 100
+  # Configuration spécifique pour les fichiers CSV légers
+  pipeline.unsafe_shutdown: false
+  config.reload.automatic: true
+  config.reload.interval: "30s"
+
+# Pipeline pour l'import des pays autorisés par utilisateur
+- pipeline.id: user-allowed
+  path.config: "/etc/logstash/pipelines.d/user_allowed.conf"
+  pipeline.workers: 1
+  pipeline.batch.size: 100
+  pipeline.batch.delay: 100
+  # Configuration spécifique pour les fichiers CSV légers
+  pipeline.unsafe_shutdown: false
+  config.reload.automatic: true
+  config.reload.interval: "30s"
+
+# Pipeline principal O365 (référence pour la configuration complète)
+- pipeline.id: o365-main
+  path.config: "/etc/logstash/pipelines.d/o365-main.conf"
+  pipeline.workers: 4
+  pipeline.batch.size: 500
+  pipeline.batch.delay: 50
+  # Configuration pour traitement en temps réel
+  pipeline.unsafe_shutdown: false
+  config.reload.automatic: true
+  config.reload.interval: "10s"
+#   path.config: "/etc/logstash/pipelines.d/o365_main.conf"
+#   pipeline.workers: 2
+#   pipeline.batch.size: 500
+#   pipeline.batch.delay: 5

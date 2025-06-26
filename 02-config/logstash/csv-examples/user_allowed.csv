@@ -1,0 +1,11 @@
+tenant_user,allowed
+contoso|alice@contoso.com,US|GB|DE
+contoso|bob@contoso.com,US|FR
+contoso|charlie@contoso.com,GB|DE|FR|ES
+fabrikam|diana@fabrikam.com,FR|BE|LU
+fabrikam|eve@fabrikam.com,BE|NL|DE
+northwind|frank@northwind.com,CA|US
+northwind|grace@northwind.com,CA|US|MX
+acme|henry@acme.com,AU|NZ|SG
+acme|isabelle@acme.com,SG|JP|KR
+tech-corp|jack@tech-corp.com,US|CA|GB

@@ -1,0 +1,76 @@
+---
+title: Architecture des Certificats TLS - docker-elk
+---
+flowchart TB
+    %% Styles pour certificats et sécurité
+    classDef ca fill:#4a1a4a,stroke:#ff00ff,stroke-width:3px,color:#ffffff
+    classDef cert fill:#2a4a2a,stroke:#00ff00,stroke-width:2px,color:#ffffff
+    classDef service fill:#1a2a4a,stroke:#00aaff,stroke-width:2px,color:#ffffff
+    classDef volume fill:#4a2a1a,stroke:#ffaa00,stroke-width:2px,color:#ffffff
+
+    %% Autorité de Certification
+    subgraph CA_Section["Autorité de Certification (CA)"]
+        CA_Root["ca.crt<br/>ca.key<br/>Autorité Racine"]:::ca
+    end
+
+    %% Volume Docker persistant
+    subgraph Docker_Volume["Volume Docker 'certs'"]
+        CertsVolume["/usr/share/*/config/certs<br/>Volume persistant partagé"]:::volume
+    end
+
+    %% Certificats par service
+    subgraph ES_Certs["Elasticsearch Certificates"]
+        ES_Cert["elasticsearch.crt<br/>elasticsearch.key<br/>Port 9200 HTTPS<br/>Port 9300 Transport"]:::cert
+    end
+
+    subgraph Kibana_Certs["Kibana Certificates"]
+        Kibana_Cert["kibana.crt<br/>kibana.key<br/>Port 5601 HTTPS"]:::cert
+    end
+
+    subgraph Fleet_Certs["Fleet Server Certificates"]
+        Fleet_Cert["fleet-server.crt<br/>fleet-server.key<br/>Port 8220 HTTPS"]:::cert
+    end
+
+    subgraph Logstash_Certs["Logstash Certificates"]
+        Logstash_Cert["logstash.crt<br/>logstash.key<br/>Ports 5044/50000/9600"]:::cert
+    end
+
+    %% Services utilisant les certificats
+    subgraph Services["Services Docker-ELK"]
+        ES_Service["Elasticsearch<br/>TLS enabled"]:::service
+        Kibana_Service["Kibana<br/>HTTPS enabled"]:::service
+        Fleet_Service["Fleet Server<br/>TLS enabled"]:::service
+        Logstash_Service["Logstash<br/>TLS outputs"]:::service
+    end
+
+    %% Relations de génération des certificats
+    CA_Root -->|Génère et signe| ES_Cert
+    CA_Root -->|Génère et signe| Kibana_Cert
+    CA_Root -->|Génère et signe| Fleet_Cert
+    CA_Root -->|Génère et signe| Logstash_Cert
+
+    %% Stockage dans volume
+    CA_Root --> CertsVolume
+    ES_Cert --> CertsVolume
+    Kibana_Cert --> CertsVolume
+    Fleet_Cert --> CertsVolume
+    Logstash_Cert --> CertsVolume
+
+    %% Utilisation par les services
+    CertsVolume --> ES_Service
+    CertsVolume --> Kibana_Service
+    CertsVolume --> Fleet_Service
+    CertsVolume --> Logstash_Service
+
+    %% Processus de génération
+    subgraph Generation["Processus de Génération TLS"]
+        TLS_Step1["1. docker compose up tls<br/>Génère CA + certificats"]:::ca
+        TLS_Step2["2. Validation instances.yml<br/>DNS/IP pour certificats"]:::cert
+        TLS_Step3["3. Distribution automatique<br/>vers tous les services"]:::service
+    end
+
+    %% Commandes importantes
+    subgraph Commands["Commandes Importantes"]
+        Regen["Re-génération:<br/>docker compose up tls"]:::ca
+        Cleanup["Nettoyage:<br/>find tls/certs -name ca -prune<br/>-or -type d -mindepth 1<br/>-exec rm -rfv {} +"]:::cert
+    end

@@ -270,16 +270,6 @@ elasticsearch:
     - "9300:9300"
   depends_on:
     - tls
-```
-      xpack.security.transport.ssl.enabled: true
-      xpack.security.transport.ssl.key: certs/elasticsearch/elasticsearch.key
-      xpack.security.transport.ssl.certificate: certs/elasticsearch/elasticsearch.crt
-      xpack.security.transport.ssl.certificate_authorities: certs/ca/ca.crt
-    ports:
-      - "9200:9200"
-      - "9300:9300"
-    depends_on:
-      - tls
 
   fleet-server:
     build:
@@ -296,7 +286,11 @@ elasticsearch:
       FLEET_SERVER_SERVICE_TOKEN: ${FLEET_TOKEN}
       FLEET_SERVER_CERT: /usr/share/fleet-server/config/certs/fleet-server/fleet-server.crt
       FLEET_SERVER_CERT_KEY: /usr/share/fleet-server/config/certs/fleet-server/fleet-server.key
-    ports:### Variables d'Environnement (.env)
+    ports:
+      - "8220:8220"
+```
+
+### Variables d'Environnement (.env)
 
 ```env
 # Configuration TLS et authentification
@@ -516,6 +510,30 @@ Cette documentation reflète une architecture **docker-elk TLS production-ready*
 ### Principe de Fonctionnement
 
 L'intégration Office 365 est basée sur l'utilisation de l'Office 365 Management Activity API via le package O365 standard d'Elastic. Cette configuration est entièrement gérée par Fleet Server.
+
+### Architecture d'Enrichissement des Données
+
+![O365 Data Enrichment Flow](infrastructure_diagrams/o365_data_enrichment_flow.mmd)
+
+L'architecture d'enrichissement des données O365 combine plusieurs composants pour fournir une analyse sécurisée avec validation géographique :
+
+#### 1. Sources de Données
+- **Office 365 Management API** : Collecte en temps réel des événements d'audit et d'activité
+- **CSV Whitelists** : Listes blanches des pays autorisés (utilisateurs et tenants)
+
+#### 2. Couche de Collecte
+- **Elastic Agent** : Intégration O365 native avec transformation ECS
+- **Logstash** : Pipelines dédiés pour l'analyse des fichiers CSV
+
+#### 3. Enrichissement à l'Ingestion
+- **Enrich Policies** : Politiques de lookup pour validation géographique
+- **Ingest Pipeline** : Enrichissement automatique avec flags `user.whitelisted` et `tenant.whitelisted`
+
+#### 4. Avantages de cette Architecture
+- **Performance** : Enrichissement à l'ingestion (pas de jointures coûteuses)
+- **Sécurité** : Validation immédiate des connexions géographiques
+- **Scalabilité** : Traitement distribué et cache des lookups
+- **Maintenance** : Mise à jour des listes blanches via CSV simples
 
 ### Configuration Azure AD
 

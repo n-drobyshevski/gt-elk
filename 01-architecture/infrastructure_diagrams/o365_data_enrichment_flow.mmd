@@ -1,0 +1,83 @@
+---
+title: Flux d'    %% Intégration Elastic Agent
+    subgraph Agent_Layer["🔄 Couche de Collecte de Données"]
+        direction TB
+        ElasticAgent["Agent Elastic<br/>(Intégration O365)"]
+        LogstashTenant["Pipeline Logstash<br/>tenant-allowed"]
+        LogstashUser["Pipeline Logstash<br/>user-allowed"]
+        LogstashMain["Pipeline Logstash<br/>o365-main"]
+    endissement des Données O365 avec Listes Blanches CSV
+config:
+  flowchart:
+    htmlLabels: false
+    curve: 'basis'
+---
+
+flowchart TB
+    %% Sources de données Office 365
+    O365[("Office 365<br/>API de Gestion")]
+    
+    %% Sources CSV
+    subgraph CSV_Sources["Sources Listes CSV"]
+        direction TB
+        UserCSV[("user_allowed.csv")]
+        TenantCSV[("tenant_allowed.csv")]
+    end
+    
+    %% Intégration Elastic Agent
+    subgraph Agent_Layer["Couche de Collecte de Données"]
+        direction TB
+        ElasticAgent["Agent Elastic<br/>(Intégration O365)"]
+        LogstashCSV["Logstash Pipelines<br/>user-allowed<br/>tenant-allowed"]
+    end
+    
+    %% Couche de traitement
+    subgraph Processing["Traitement des Données"]
+        direction TB
+        DataStreams[("Flux de Données<br/>logs-o365.audit-*")]
+        TenantIndex[("Index Tenant<br/>tenant_allowed_countries")]
+        UserIndex[("Index Utilisateurs<br/>user_allowed_countries")]
+    end
+    
+    %% Couche d'enrichissement
+    subgraph Enrichment["Couche d'Enrichissement"]
+        direction TB
+        EnrichPolicies["Politiques d'Enrichissement<br/>tenant-countries<br/>user-tenant-countries"]
+        IngestPipeline["Pipeline d'Ingestion<br/>o365-enrich-pipeline"]
+    end
+    
+    %% Stockage et visualisation
+    subgraph Output["Stockage et Visualisation"]
+        direction TB
+        EnrichedDocs[("Documents Enrichis<br/>user_countries.allowed<br/>tenant_countries.allowed")]
+        KibanaDash["Tableaux de Bord Kibana"]
+    end
+    
+    %% Connexions de flux de données
+    O365 -->|"Événements d'Audit<br/>et d'Activité (Temps réel)"| ElasticAgent
+    UserCSV -->|"Format: tenant_user,allowed<br/>Workers: 1, Batch: 100"| LogstashUser
+    TenantCSV -->|"Format: tenant,allowed<br/>Workers: 1, Batch: 100"| LogstashTenant
+    
+    ElasticAgent -->|"Événements JSON<br/>Conformes ECS"| LogstashMain
+    LogstashMain -->|"Pipeline: o365-main<br/>Workers: 4, Batch: 500"| DataStreams
+    LogstashTenant -->|"Index: tenant_allowed_countries<br/>Document ID: %{tenant.id}"| TenantIndex
+    LogstashUser -->|"Index: user_allowed_countries<br/>Document ID: %{tenant_user}"| UserIndex
+    
+    DataStreams -->|"Événements O365<br/>Bruts"| IngestPipeline
+    TenantIndex -->|"Lookup: tenant"| EnrichPolicies
+    UserIndex -->|"Lookup: tenant_user"| EnrichPolicies
+    EnrichPolicies -->|"Enrichissement: allowed<br/>pour validation pays"| IngestPipeline
+    
+    IngestPipeline -->|"Enrichi lors de<br/>l'Ingestion"| EnrichedDocs
+    EnrichedDocs -->|"Filtré et<br/>Analysé"| KibanaDash
+    
+    %% Styles pour les différents composants avec contraste élevé
+    classDef sourceStyle fill:#bbdefb,stroke:#0d47a1,stroke-width:2px,color:#000000
+    classDef processStyle fill:#e1bee7,stroke:#4a148c,stroke-width:2px,color:#000000
+    classDef enrichStyle fill:#c8e6c9,stroke:#1b5e20,stroke-width:2px,color:#000000
+    classDef outputStyle fill:#ffcc80,stroke:#e65100,stroke-width:2px,color:#000000
+    
+    class O365,UserCSV,TenantCSV sourceStyle
+    class ElasticAgent,LogstashTenant,LogstashUser,LogstashMain,DataStreams,TenantIndex,UserIndex processStyle
+    class EnrichPolicies,IngestPipeline enrichStyle
+    class EnrichedDocs,KibanaDash outputStyle
